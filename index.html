@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="app-container" id="appContainer">
+        <aside class="sidebar">
+            <div class="sidebar-logo">MyHealth<span class="dot">.</span></div>
+            <nav class="sidebar-nav">
+                <button class="sidebar-link active" onclick="switchCategory('all')">
+                    <span class="icon">🏠</span> Dashboard
+                </button>
+                <button class="sidebar-link" onclick="switchCategory('vitals')">
+                    <span class="icon">❤️</span> Vitals
+                </button>
+                <button class="sidebar-link" onclick="switchCategory('nutrition')">
+                    <span class="icon">🍎</span> Nutrition
+                </button>
+                <button class="sidebar-link" onclick="switchCategory('mental')">
+                    <span class="icon">🧘</span> Mental
+                </button>
+                <button class="sidebar-link" onclick="switchCategory('profile')">
+                    <span class="icon">👤</span> Profile
+                </button>
+            </nav>
+            <div style="margin-top: auto;">
+                <button class="sidebar-link" onclick="openSettings()">
+                    <span class="icon">⚙️</span> Settings
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="app-header">
+                <div class="header-content">
+                    <h1>Daily Overview<span class="dot">.</span></h1>
+                    <p class="date-display" id="currentDate">Today</p>
+                </div>
+            </header>
+
+            <div id="dashboard-content">
+                <!-- Activity Section -->
+                <div id="activity-section" class="dashboard-section">
+                    <h2 class="section-title">Daily Activity & Fitness</h2>
+                    <div class="overview-grid">
+                        <!-- Steps Card -->
+                        <div class="card stat-card" id="stepsCard">
+                            <div class="card-header">
+                                <h3>Steps</h3>
+                                <span class="icon-bg steps-bg">👟</span>
+                            </div>
+                            <div class="stat-main">
+                                <div class="progress-ring-container">
+                                    <svg class="progress-ring" width="120" height="120">
+                                        <circle class="progress-ring__circle--bg" stroke="currentColor" stroke-width="8"
+                                            fill="transparent" r="45" cx="60" cy="60" />
+                                        <circle class="progress-ring__circle--fg" id="stepsRing" stroke="currentColor"
+                                            stroke-width="8" fill="transparent" r="45" cx="60" cy="60" />
+                                    </svg>
+                                    <div class="ring-content">
+                                        <span class="big-num" id="stepsCount">0</span>
+                                        <span class="label">steps</span>
+                                    </div>
+                                </div>
+                                <div class="stat-details">
+                                    <div class="detail-item">
+                                        <span class="detail-label">Goal</span>
+                                        <span class="detail-val" id="stepsGoal">10000</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Dist.</span>
+                                        <span class="detail-val" id="stepsDist">0.0</span> <span class="unit">km</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn-ripple btn-add green-btn" onclick="openModal('steps')">+</button>
+                        </div>
+
+                        <!-- Workouts Card -->
+                        <div class="card stat-card" id="workoutCard">
+                            <div class="card-header">
+                                <h3>Workouts</h3>
+                                <span class="icon-bg workout-bg">💪</span>
+                            </div>
+                            <div class="workout-list" id="workoutList">
+                                <div class="workout-pill" onclick="logWorkout('Run')">🏃 Run</div>
+                                <div class="workout-pill" onclick="logWorkout('Cycle')">🚴 Cycle</div>
+                                <div class="workout-pill" onclick="logWorkout('Gym')">🏋️ Gym</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vitals Section -->
+                <div id="vitals-section" class="dashboard-section">
+                    <h2 class="section-title">Vitals & Biometrics</h2>
+                    <div class="overview-grid">
+                        <!-- Heart Rate Card -->
+                        <div class="card stat-card" id="heartRateCard">
+                            <div class="card-header">
+                                <h3>Heart Rate</h3>
+                                <span class="icon-bg heart-bg pulse">❤️</span>
+                            </div>
+                            <div class="stat-main center-layout">
+                                <div class="heart-display">
+                                    <span class="big-num pulse-text" id="bpmValue">72</span>
+                                    <span class="unit">BPM</span>
+                                </div>
+                                <div class="sparkline" id="heartSparkline"></div>
+                            </div>
+                            <button class="btn-ripple btn-add red-btn" onclick="simulateHeartRate()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Sleep Card -->
+                        <div class="card stat-card" id="sleepCard">
+                            <div class="card-header">
+                                <h3>Sleep</h3>
+                                <span class="icon-bg sleep-bg">🌙</span>
+                            </div>
+                            <div class="stat-main center-layout">
+                                <div class="sleep-display">
+                                    <span class="big-num" id="sleepHours">7.5</span>
+                                    <span class="unit">hours</span>
+                                </div>
+                                <div class="sleep-stages">
+                                    <div class="stage-bar rem" style="width: 25%" title="REM"></div>
+                                    <div class="stage-bar light" style="width: 50%" title="Light"></div>
+                                    <div class="stage-bar deep" style="width: 25%" title="Deep"></div>
+                                </div>
+                            </div>
+                            <button class="btn-ripple btn-add purple-btn" onclick="openModal('sleep')">+</button>
+                        </div>
+
+                        <!-- SpO2 Card -->
+                        <div class="card stat-card" id="spo2Card">
+                            <div class="card-header">
+                                <h3>Blood Oxygen</h3>
+                                <span class="icon-bg spo2-bg">🩸</span>
+                            </div>
+                            <div class="stat-main vitals-mini">
+                                <span class="big-num" id="spo2Value">98</span>
+                                <span class="unit">% SpO2</span>
+                            </div>
+                            <button class="btn-ripple btn-add red-btn" onclick="simulateSpO2()">+</button>
+                        </div>
+
+                        <!-- Body Metrics Card -->
+                        <div class="card stat-card" id="metricsCard">
+                            <div class="card-header">
+                                <h3>Body Metrics</h3>
+                                <span class="icon-bg metrics-bg">⚖️</span>
+                            </div>
+                            <div class="metrics-grid">
+                                <div class="metric-item">
+                                    <span class="m-label">Weight</span>
+                                    <span class="m-val" id="weightVal">70</span><span class="unit">kg</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="m-label">BMI</span>
+                                    <span class="m-val" id="bmiVal">22.5</span>
+                                </div>
+                            </div>
+                            <button class="btn-ripple btn-add" onclick="openModal('metrics')">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nutrition Section -->
+                <div id="nutrition-section" class="dashboard-section">
+                    <h2 class="section-title">Nutrition & Lifestyle</h2>
+                    <div class="overview-grid">
+                        <!-- Calories Card -->
+                        <div class="card stat-card" id="caloriesCard">
+                            <div class="card-header">
+                                <h3>Calories</h3>
+                                <span class="icon-bg fire-bg">🔥</span>
+                            </div>
+                            <div class="stat-main">
+                                <div class="progress-ring-container">
+                                    <svg class="progress-ring" width="120" height="120">
+                                        <circle class="progress-ring__circle--bg" stroke="currentColor" stroke-width="8"
+                                            fill="transparent" r="45" cx="60" cy="60" />
+                                        <circle class="progress-ring__circle--fg" id="calRing" stroke="currentColor"
+                                            stroke-width="8" fill="transparent" r="45" cx="60" cy="60" />
+                                    </svg>
+                                    <div class="ring-content">
+                                        <span class="big-num" id="calRemaining">2000</span>
+                                        <span class="label">left</span>
+                                    </div>
+                                </div>
+                                <div class="macros-mini">
+                                    <div class="macro">P: <span id="macroP">0</span>g</div>
+                                    <div class="macro">C: <span id="macroC">0</span>g</div>
+                                    <div class="macro">F: <span id="macroF">0</span>g</div>
+                                </div>
+                            </div>
+                            <button class="btn-ripple btn-add" onclick="openModal('food')">+</button>
+                        </div>
+
+                        <!-- Water Card -->
+                        <div class="card stat-card" id="waterCard">
+                            <div class="card-header">
+                                <h3>Hydration</h3>
+                                <span class="icon-bg water-bg">💧</span>
+                            </div>
+                            <div class="stat-main column-layout">
+                                <div class="water-visual">
+                                    <div class="glass-container-mini">
+                                        <div class="water-level" id="waterLevel" style="height: 0%;"></div>
+                                    </div>
+                                    <div class="water-text">
+                                        <span class="big-num" id="waterCount">0</span>
+                                        <span class="unit">/ 8 gl.</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn-ripple btn-add blue-btn" onclick="addWater()">+</button>
+                        </div>
+
+                        <!-- Medication Card -->
+                        <div class="card stat-card" id="medCard">
+                            <div class="card-header">
+                                <h3>Medication</h3>
+                                <span class="icon-bg med-bg">💊</span>
+                            </div>
+                            <div class="med-list" id="medList">
+                                <!-- Injected by JS -->
+                                <div class="empty-state-mini">No meds scheduled</div>
+                            </div>
+                            <button class="btn-ripple btn-add purple-btn" onclick="openModal('med')">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mental Well-being Section -->
+                <div id="mental-section" class="dashboard-section">
+                    <h2 class="section-title">Mental Well-being</h2>
+                    <div class="overview-grid">
+                        <!-- Stress Card -->
+                        <div class="card stat-card" id="stressCard">
+                            <div class="card-header">
+                                <h3>Stress Level</h3>
+                                <span class="icon-bg stress-bg">🧠</span>
+                            </div>
+                            <div class="stat-main center-layout">
+                                <span class="big-num" id="stressValue">Low</span>
+                                <div class="stress-bar">
+                                    <div class="stress-fill" id="stressFill" style="width: 20%;"></div>
+                                </div>
+                            </div>
+                            <button class="btn-ripple btn-add blue-btn" onclick="startBreathing()">🫁</button>
+                        </div>
+
+                        <!-- Mood Journal Card -->
+                        <div class="card stat-card" id="moodCard">
+                            <div class="card-header">
+                                <h3>Mood Journal</h3>
+                                <span class="icon-bg mood-bg">😊</span>
+                            </div>
+                            <div class="mood-selector">
+                                <button class="mood-btn" onclick="logMood('happy')">😊</button>
+                                <button class="mood-btn" onclick="logMood('calm')">🧘</button>
+                                <button class="mood-btn" onclick="logMood('sad')">😢</button>
+                                <button class="mood-btn" onclick="logMood('stressed')">😫</button>
+                            </div>
+                            <div class="current-mood" id="currentMoodDisplay">Feeling great today!</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <section class="activity-section">
+                    <div class="section-header">
+                        <h2>Recent Activity</h2>
+                        <button class="text-btn" onclick="clearAllData()">Reset Day</button>
+                    </div>
+                    <div class="log-list" id="activityLog">
+                        <div class="empty-state">
+                            <p>No transactions recorded yet.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Profile Section (Hidden by default) -->
+            <div id="profile-section" class="dashboard-section" style="display: none;">
+                <h2 class="section-title">Your Profile</h2>
+                <div class="card">
+                    <div class="profile-header">
+                        <div class="avatar">👤</div>
+                        <div class="profile-info">
+                            <h3>John Doe</h3>
+                            <p>Health Enthusiast</p>
+                        </div>
+                    </div>
+                    <div class="settings-divider"></div>
+                    <div class="stats-row">
+                        <div class="stat-item">
+                            <span class="label">Streak</span>
+                            <span class="value">12 Days</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">Level</span>
+                            <span class="value">Gold</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Floating Action Button for Mobile primarily, but good for Desktop too -->
+        <button class="fab" onclick="openModal('menu')" aria-label="Main Menu">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="modalOverlay">
+        <!-- Add Item Modal -->
+        <div class="modal slide-up" id="inputModal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add Item</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="trackerForm">
+                    <div class="form-group">
+                        <label for="itemName">Name</label>
+                        <input type="text" id="itemName" placeholder="e.g., Apple, Running" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemValue">Calories / Amount</label>
+                        <input type="number" id="itemValue" placeholder="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <div class="type-selector">
+                            <label class="radio-label">
+                                <input type="radio" name="entryType" value="food" checked>
+                                <span class="radio-custom">Food 🍔</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="entryType" value="exercise">
+                                <span class="radio-custom">Exercise 🏃</span>
+                            </label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Save Entry</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div class="modal slide-up" id="settingsModal" style="display: none;">
+            <div class="modal-header">
+                <h3>Settings</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="settingsForm">
+                    <div class="form-group">
+                        <label for="goalCal">Daily Calorie Goal</label>
+                        <input type="number" id="goalCal" placeholder="2000" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="goalWater">Daily Water Goal (Glasses)</label>
+                        <input type="number" id="goalWater" placeholder="8" required>
+                    </div>
+
+                    <div class="settings-divider"></div>
+
+                    <div class="form-group row-group">
+                        <label>Enable Reminders 🔔</label>
+                        <label class="switch">
+                            <input type="checkbox" id="notifyToggle" onchange="toggleNotifications()">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <div class="form-group row-group">
+                        <label>Drink Water Alerts 💧</label>
+                        <label class="switch">
+                            <input type="checkbox" id="waterNotifyToggle" onchange="toggleNotifications()">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <button type="button" class="btn-secondary" onclick="exportData()" style="margin-top: 20px;">Export
+                        Data (CSV)</button>
+                    <button type="submit" class="btn-primary" style="margin-top: 12px;">Save Settings</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Menu Modal -->
+        <div class="modal slide-up" id="menuModal" style="display: none;">
+            <div class="modal-header">
+                <h3>Menu</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="menu-list">
+                    <button class="menu-opt" onclick="openAddModal('food')">
+                        <span class="menu-icon">🍎</span>
+                        <div class="menu-text">
+                            <span class="menu-title">Add Food</span>
+                            <span class="menu-desc">Log a meal or snack</span>
+                        </div>
+                    </button>
+                    <button class="menu-opt" onclick="openAddModal('exercise')">
+                        <span class="menu-icon">🏃</span>
+                        <div class="menu-text">
+                            <span class="menu-title">Add Exercise</span>
+                            <span class="menu-desc">Log a workout</span>
+                        </div>
+                    </button>
+                    <button class="menu-opt" onclick="addWater(); closeModal()">
+                        <span class="menu-icon">💧</span>
+                        <div class="menu-text">
+                            <span class="menu-title">Quick Add Water</span>
+                            <span class="menu-desc">Add 1 glass</span>
+                        </div>
+                    </button>
+                    <button class="menu-opt" onclick="openStats()">
+                        <span class="menu-icon">📊</span>
+                        <div class="menu-text">
+                            <span class="menu-title">Stats</span>
+                            <span class="menu-desc">View history</span>
+                        </div>
+                    </button>
+                    <button class="menu-opt" onclick="openSettings()">
+                        <span class="menu-icon">⚙️</span>
+                        <div class="menu-text">
+                            <span class="menu-title">Settings</span>
+                            <span class="menu-desc">Goals & Preferences</span>
+                        </div>
+                    </button>
+                    <button class="menu-opt" onclick="clearAllData()">
+                        <span class="menu-icon danger-icon">🗑️</span>
+                        <div class="menu-text">
+                            <span class="menu-title danger-text">Reset Day</span>
+                            <span class="menu-desc">Clear all data</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div class="modal slide-up" id="statsModal" style="display: none;">
+        <div class="modal-header">
+            <h3>Last 7 Days</h3>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+                <canvas id="healthChart"></canvas>
+            </div>
+            <div id="statsSummary" style="margin-top: 24px;">
+                <!-- Summary cards injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Steps Modal -->
+    <div class="modal slide-up" id="stepsModal" style="display: none;">
+        <div class="modal-header">
+            <h3>Log Steps</h3>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="stepsForm">
+                <div class="form-group">
+                    <label for="stepAmount">Steps Walked</label>
+                    <input type="number" id="stepAmount" placeholder="1000" required>
+                </div>
+                <button type="submit" class="btn-primary">Save Steps</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sleep Modal -->
+    <div class="modal slide-up" id="sleepModal" style="display: none;">
+        <div class="modal-header">
+            <h3>Log Sleep</h3>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="sleepForm">
+                <div class="form-group">
+                    <label for="sleepHoursInput">Hours Slept</label>
+                    <input type="number" id="sleepHoursInput" step="0.5" placeholder="8" required>
+                </div>
+                <button type="submit" class="btn-primary">Save Sleep</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Metrics Modal -->
+    <div class="modal slide-up" id="metricsInputModal" style="display: none;">
+        <div class="modal-header">
+            <h3>Body Metrics</h3>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="metricsForm">
+                <div class="form-group">
+                    <label for="weightInput">Weight (kg)</label>
+                    <input type="number" id="weightInput" step="0.1" placeholder="70" required>
+                </div>
+                <button type="submit" class="btn-primary">Save Metrics</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Meds Modal -->
+    <div class="modal slide-up" id="medsInputModal" style="display: none;">
+        <div class="modal-header">
+            <h3>Add Medication</h3>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="medsForm">
+                <div class="form-group">
+                    <label for="medName">Medication Name</label>
+                    <input type="text" id="medName" placeholder="e.g., Vitamin D" required>
+                </div>
+                <div class="form-group">
+                    <label for="medTime">Reminder Time</label>
+                    <input type="time" id="medTime" required>
+                </div>
+                <button type="submit" class="btn-primary">Add Reminder</button>
+            </form>
+        </div>
+    </div>
+    </div>
+
+    <!-- Onboarding Overlay -->
+    <div class="onboarding-overlay" id="onboarding" style="display: none;">
+        <div class="onboarding-content">
+            <h1>Welcome to MyHealth<span class="dot">.</span></h1>
+            <p>Your simple, premium companion for tracking calories and water.</p>
+            <div class="features-list">
+                <div class="feature">🔥 Track Calories</div>
+                <div class="feature">💧 Log Water</div>
+                <div class="feature">📊 View Progress</div>
+            </div>
+            <button class="btn-primary" onclick="finishOnboarding()">Get Started</button>
+        </div>
+    </div>
+
+    <!-- Modals End -->
+    </div>
+
+    <!-- Auth Overlay -->
+    <div class="onboarding-overlay" id="authOverlay" style="display: none;">
+        <div class="onboarding-content">
+            <h1>Sync Your Health<span class="dot">.</span></h1>
+            <p>Sign in to sync your vitals and logs across all your devices.</p>
+            <form id="authForm" style="width: 100%; max-width: 320px; margin-top: 24px;">
+                <div class="form-group">
+                    <input type="email" id="authEmail" placeholder="Email Address" required
+                        style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 14px; border-radius: 12px; color: white; width: 100%;">
+                </div>
+                <div class="form-group" style="margin-top: 12px;">
+                    <input type="password" id="authPassword" placeholder="Password" required
+                        style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 14px; border-radius: 12px; color: white; width: 100%;">
+                </div>
+                <button type="submit" class="btn-primary" style="margin-top: 24px; width: 100%;" id="authBtn">Sign In /
+                    Sign Up</button>
+                <p id="authError" style="color: #fb7185; font-size: 13px; margin-top: 12px; display: none;"></p>
+            </form>
+            <button class="text-btn" style="margin-top: 16px; opacity: 0.6;" onclick="skipAuth()">Stay in Local
+                Mode</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
