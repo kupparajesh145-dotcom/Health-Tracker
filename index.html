@@ -10,7 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <!-- External Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -85,7 +84,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <button class="btn-ripple btn-add green-btn" onclick="openModal('steps')">+</button>
+                            <button class="btn-ripple btn-add green-btn" onclick="openModal('stepsModal')">+</button>
                         </div>
 
                         <!-- Workouts Card -->
@@ -95,9 +94,9 @@
                                 <span class="icon-bg workout-bg">💪</span>
                             </div>
                             <div class="workout-list" id="workoutList">
-                                <div class="workout-pill" onclick="logWorkout('Run')">🏃 Run</div>
-                                <div class="workout-pill" onclick="logWorkout('Cycle')">🚴 Cycle</div>
-                                <div class="workout-pill" onclick="logWorkout('Gym')">🏋️ Gym</div>
+                                <div class="workout-pill" onclick="startWorkout('Run')">🏃 Run</div>
+                                <div class="workout-pill" onclick="startWorkout('Cycle')">🚴 Cycle</div>
+                                <div class="workout-pill" onclick="startWorkout('Gym')">🏋️ Gym</div>
                             </div>
                         </div>
                     </div>
@@ -146,7 +145,7 @@
                                     <div class="stage-bar deep" style="width: 25%" title="Deep"></div>
                                 </div>
                             </div>
-                            <button class="btn-ripple btn-add purple-btn" onclick="openModal('sleep')">+</button>
+                            <button class="btn-ripple btn-add purple-btn" onclick="openModal('sleepModal')">+</button>
                         </div>
 
                         <!-- SpO2 Card -->
@@ -178,7 +177,7 @@
                                     <span class="m-val" id="bmiVal">22.5</span>
                                 </div>
                             </div>
-                            <button class="btn-ripple btn-add" onclick="openModal('metrics')">+</button>
+                            <button class="btn-ripple btn-add" onclick="openModal('metricsInputModal')">+</button>
                         </div>
                     </div>
                 </div>
@@ -212,7 +211,7 @@
                                     <div class="macro">F: <span id="macroF">0</span>g</div>
                                 </div>
                             </div>
-                            <button class="btn-ripple btn-add" onclick="openModal('food')">+</button>
+                            <button class="btn-ripple btn-add" onclick="openAddModal('food')">+</button>
                         </div>
 
                         <!-- Water Card -->
@@ -245,7 +244,7 @@
                                 <!-- Injected by JS -->
                                 <div class="empty-state-mini">No meds scheduled</div>
                             </div>
-                            <button class="btn-ripple btn-add purple-btn" onclick="openModal('med')">+</button>
+                            <button class="btn-ripple btn-add purple-btn" onclick="openModal('medsInputModal')">+</button>
                         </div>
                     </div>
                 </div>
@@ -327,7 +326,7 @@
         </main>
 
         <!-- Floating Action Button for Mobile primarily, but good for Desktop too -->
-        <button class="fab" onclick="openModal('menu')" aria-label="Main Menu">
+        <button class="fab" onclick="openModal('menuModal')" aria-label="Main Menu">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -466,99 +465,115 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Stats Modal -->
-    <div class="modal slide-up" id="statsModal" style="display: none;">
-        <div class="modal-header">
-            <h3>Last 7 Days</h3>
-            <button class="close-btn" onclick="closeModal()">&times;</button>
-        </div>
-        <div class="modal-body">
-            <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
-                <canvas id="healthChart"></canvas>
+        <!-- Stats Modal -->
+        <div class="modal slide-up" id="statsModal" style="display: none;">
+            <div class="modal-header">
+                <h3>Last 7 Days</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
             </div>
-            <div id="statsSummary" style="margin-top: 24px;">
-                <!-- Summary cards injected by JS -->
+            <div class="modal-body">
+                <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+                    <canvas id="healthChart"></canvas>
+                </div>
+                <div id="statsSummary" style="margin-top: 24px;">
+                    <!-- Summary cards injected by JS -->
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Steps Modal -->
-    <div class="modal slide-up" id="stepsModal" style="display: none;">
-        <div class="modal-header">
-            <h3>Log Steps</h3>
-            <button class="close-btn" onclick="closeModal()">&times;</button>
+        <!-- Steps Modal -->
+        <div class="modal slide-up" id="stepsModal" style="display: none;">
+            <div class="modal-header">
+                <h3>Log Steps</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="stepsForm">
+                    <div class="form-group">
+                        <label for="stepAmount">Steps Walked</label>
+                        <input type="number" id="stepAmount" placeholder="1000" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Save Steps</button>
+                </form>
+            </div>
         </div>
-        <div class="modal-body">
-            <form id="stepsForm">
-                <div class="form-group">
-                    <label for="stepAmount">Steps Walked</label>
-                    <input type="number" id="stepAmount" placeholder="1000" required>
-                </div>
-                <button type="submit" class="btn-primary">Save Steps</button>
-            </form>
-        </div>
-    </div>
 
-    <!-- Sleep Modal -->
-    <div class="modal slide-up" id="sleepModal" style="display: none;">
-        <div class="modal-header">
-            <h3>Log Sleep</h3>
-            <button class="close-btn" onclick="closeModal()">&times;</button>
+        <!-- Sleep Modal -->
+        <div class="modal slide-up" id="sleepModal" style="display: none;">
+            <div class="modal-header">
+                <h3>Log Sleep</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="sleepForm">
+                    <div class="form-group">
+                        <label for="sleepHoursInput">Hours Slept</label>
+                        <input type="number" id="sleepHoursInput" step="0.5" placeholder="8" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Save Sleep</button>
+                </form>
+            </div>
         </div>
-        <div class="modal-body">
-            <form id="sleepForm">
-                <div class="form-group">
-                    <label for="sleepHoursInput">Hours Slept</label>
-                    <input type="number" id="sleepHoursInput" step="0.5" placeholder="8" required>
-                </div>
-                <button type="submit" class="btn-primary">Save Sleep</button>
-            </form>
-        </div>
-    </div>
 
-    <!-- Metrics Modal -->
-    <div class="modal slide-up" id="metricsInputModal" style="display: none;">
-        <div class="modal-header">
-            <h3>Body Metrics</h3>
-            <button class="close-btn" onclick="closeModal()">&times;</button>
+        <!-- Metrics Modal -->
+        <div class="modal slide-up" id="metricsInputModal" style="display: none;">
+            <div class="modal-header">
+                <h3>Body Metrics</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="metricsForm">
+                    <div class="form-group">
+                        <label for="weightInput">Weight (kg)</label>
+                        <input type="number" id="weightInput" step="0.1" placeholder="70" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Save Metrics</button>
+                </form>
+            </div>
         </div>
-        <div class="modal-body">
-            <form id="metricsForm">
-                <div class="form-group">
-                    <label for="weightInput">Weight (kg)</label>
-                    <input type="number" id="weightInput" step="0.1" placeholder="70" required>
-                </div>
-                <button type="submit" class="btn-primary">Save Metrics</button>
-            </form>
-        </div>
-    </div>
 
-    <!-- Meds Modal -->
-    <div class="modal slide-up" id="medsInputModal" style="display: none;">
-        <div class="modal-header">
-            <h3>Add Medication</h3>
-            <button class="close-btn" onclick="closeModal()">&times;</button>
+        <!-- Meds Modal -->
+        <div class="modal slide-up" id="medsInputModal" style="display: none;">
+            <div class="modal-header">
+                <h3>Add Medication</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="medsForm">
+                    <div class="form-group">
+                        <label for="medName">Medication Name</label>
+                        <input type="text" id="medName" placeholder="e.g., Vitamin D" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="medTime">Reminder Time</label>
+                        <input type="time" id="medTime" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Add Reminder</button>
+                </form>
+            </div>
         </div>
-        <div class="modal-body">
-            <form id="medsForm">
-                <div class="form-group">
-                    <label for="medName">Medication Name</label>
-                    <input type="text" id="medName" placeholder="e.g., Vitamin D" required>
+
+        <!-- Workout Timer Modal -->
+        <div class="modal slide-up" id="timerModal" style="display: none;">
+            <div class="modal-header">
+                <h3 id="timerTitle">Workout Timer</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <div class="timer-display" id="timerDisplay">00:00:00</div>
+                <div class="timer-controls" style="margin-top: 24px; display: flex; justify-content: center; gap: 16px;">
+                    <button class="btn-primary" id="startPauseBtn" onclick="startPauseTimer()">Start</button>
+                    <button class="btn-secondary" onclick="resetTimer()">Reset</button>
                 </div>
-                <div class="form-group">
-                    <label for="medTime">Reminder Time</label>
-                    <input type="time" id="medTime" required>
-                </div>
-                <button type="submit" class="btn-primary">Add Reminder</button>
-            </form>
+                <button class="btn-primary" style="margin-top: 24px; width: 100%;" onclick="logTrackedWorkout()">Log Workout</button>
+            </div>
         </div>
-    </div>
+
     </div>
 
     <!-- Onboarding Overlay -->
-    <div class="onboarding-overlay" id="onboarding" style="display: none;">
+    <div class="onboarding-overlay" id="onboarding" style="display: flex;">
         <div class="onboarding-content">
             <h1>Welcome to MyHealth<span class="dot">.</span></h1>
             <p>Your simple, premium companion for tracking calories and water.</p>
@@ -570,31 +585,13 @@
             <button class="btn-primary" onclick="finishOnboarding()">Get Started</button>
         </div>
     </div>
-
-    <!-- Modals End -->
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="spinner"></div>
     </div>
 
-    <!-- Auth Overlay -->
-    <div class="onboarding-overlay" id="authOverlay" style="display: none;">
-        <div class="onboarding-content">
-            <h1>Sync Your Health<span class="dot">.</span></h1>
-            <p>Sign in to sync your vitals and logs across all your devices.</p>
-            <form id="authForm" style="width: 100%; max-width: 320px; margin-top: 24px;">
-                <div class="form-group">
-                    <input type="email" id="authEmail" placeholder="Email Address" required
-                        style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 14px; border-radius: 12px; color: white; width: 100%;">
-                </div>
-                <div class="form-group" style="margin-top: 12px;">
-                    <input type="password" id="authPassword" placeholder="Password" required
-                        style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 14px; border-radius: 12px; color: white; width: 100%;">
-                </div>
-                <button type="submit" class="btn-primary" style="margin-top: 24px; width: 100%;" id="authBtn">Sign In /
-                    Sign Up</button>
-                <p id="authError" style="color: #fb7185; font-size: 13px; margin-top: 12px; display: none;"></p>
-            </form>
-            <button class="text-btn" style="margin-top: 16px; opacity: 0.6;" onclick="skipAuth()">Stay in Local
-                Mode</button>
-        </div>
+    <!-- Modals End -->
     </div>
 
     <script src="app.js"></script>
